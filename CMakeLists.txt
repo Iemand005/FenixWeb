@@ -97,7 +97,7 @@ if(EMSCRIPTEN)
     )
 
     # Deploy to dist/ for GitHub Pages (only html + js + wasm + data)
-    set(DIST_DIR "${CMAKE_CURRENT_SOURCE_DIR}/dist")
+    set(DIST_DIR "${CMAKE_CURRENT_SOURCE_DIR}/docs")
     add_custom_command(TARGET FenixWeb POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E make_directory "${DIST_DIR}"
         COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE_DIR:FenixWeb>/FenixWeb.html" "${DIST_DIR}/index.html"
