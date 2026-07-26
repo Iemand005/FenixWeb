@@ -73,6 +73,14 @@ target_link_libraries(FenixWeb PRIVATE
     Engine
 )
 
+if(EMSCRIPTEN)
+    target_compile_definitions(FenixWeb PRIVATE
+        FE_EXCLUDE_GLFW
+        FE_EXCLUDE_VULKAN
+        FE_EXCLUDE_JOLT
+    )
+endif()
+
 if(MSVC)
     target_compile_options(FenixWeb PRIVATE $<$<CONFIG:Debug>:/Zi>)
     target_link_options(FenixWeb PRIVATE $<$<CONFIG:Debug>:/DEBUG>)
@@ -91,20 +99,20 @@ if(EMSCRIPTEN)
     set(CMAKE_EXECUTABLE_SUFFIX ".html")
 
     set(EMSCRIPTEN_LINK_FLAGS
-        "-s USE_SDL=3"
-        "-s USE_WEBGL2=1"
-        "-s FULL_ES3=1"
-        "-s GL_ENABLE_GET_PROC_ADDRESS=1"
-        "-s ALLOW_MEMORY_GROWTH=1"
-        "-s INITIAL_MEMORY=64MB"
-        "-s NO_EXIT_RUNTIME=1"
-        "-s EXIT_RUNTIME=0"
-        "-s EXPORTED_RUNTIME_METHODS=['ccall','cwrap']"
-        "-s EXPORTED_FUNCTIONS=['_main']"
-        "-s MODULARIZE=1"
-        "-s EXPORT_NAME=FenixWeb"
-        "-s MAX_WEBGL_VERSION=2"
-        "-s MIN_WEBGL_VERSION=2"
+        "SHELL:-s USE_SDL=3"
+        "SHELL:-s USE_WEBGL2=1"
+        "SHELL:-s FULL_ES3=1"
+        "SHELL:-s GL_ENABLE_GET_PROC_ADDRESS=1"
+        "SHELL:-s ALLOW_MEMORY_GROWTH=1"
+        "SHELL:-s INITIAL_MEMORY=64MB"
+        "SHELL:-s NO_EXIT_RUNTIME=1"
+        "SHELL:-s EXIT_RUNTIME=0"
+        "SHELL:-s EXPORTED_RUNTIME_METHODS=['ccall','cwrap']"
+        "SHELL:-s EXPORTED_FUNCTIONS=['_main']"
+        "SHELL:-s MODULARIZE=1"
+        "SHELL:-s EXPORT_NAME=FenixWeb"
+        "SHELL:-s MAX_WEBGL_VERSION=2"
+        "SHELL:-s MIN_WEBGL_VERSION=2"
         "-Os"
         "-flto"
     )
@@ -112,6 +120,6 @@ if(EMSCRIPTEN)
 
     set_target_properties(FenixWeb PROPERTIES
         SUFFIX ".html"
-        LINK_FLAGS "${EMSCRIPTEN_LINK_FLAGS_STR}"
+        LINK_FLAGS "-s USE_SDL=3 -s USE_WEBGL2=1 -s FULL_ES3=1 -sGL_ENABLE_GET_PROC_ADDRESS=1 -s ALLOW_MEMORY_GROWTH=1 -s INITIAL_MEMORY=64MB -s NO_EXIT_RUNTIME=1 -s EXIT_RUNTIME=0 -s MAX_WEBGL_VERSION=2 -s MIN_WEBGL_VERSION=2 -Os -flto"
     )
 endif()
