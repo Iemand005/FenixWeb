@@ -1,4 +1,5 @@
-#version 330 core
+#version 300 es
+precision mediump float;
 out vec4 FragColor;
 
 in vec3 Normal;
@@ -23,7 +24,8 @@ void main()
     vec3 albedo = texture(ourTexture, TexCoord).rgb;
 
     vec3 lighting = vec3(0.1);
-    for (int i = 0; i < lightCount; ++i) {
+    for (int i = 0; i < 8; ++i) {
+        if (i >= lightCount) break;
         vec3 L = pointLights[i].position - FragPos;
         float dist = length(L);
         if (dist < 0.0001) continue;
