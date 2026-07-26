@@ -29,7 +29,6 @@ int main() {
     // Disable buffering so cout/cerr/printf show in browser console
     setvbuf(stdout, nullptr, _IONBF, 0);
     setvbuf(stderr, nullptr, _IONBF, 0);
-    emscripten_log(EMLOG_LOG, "FenixWeb: starting up...");
 #endif
 
     std::cout << "FenixWeb: starting up..." << std::endl;
@@ -38,9 +37,6 @@ int main() {
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         const char* err = SDL_GetError();
         std::cerr << "SDL_Init failed: " << (err ? err : "(null)") << std::endl;
-#ifdef __EMSCRIPTEN__
-        emscripten_log(EMLOG_ERROR, "SDL_Init failed: %s", err ? err : "(null)");
-#endif
         return 1;
     }
     
