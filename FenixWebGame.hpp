@@ -15,7 +15,7 @@ namespace fe {
 		bool showDebugUI_ = true;
 
 	public:
-		using Renderer::Renderer;
+		FenixWebGame(GLADloadproc loadProc) : Renderer(loadProc) {}
 
 		void ToggleDebugUI() { showDebugUI_ = !showDebugUI_; }
 		bool IsDebugUIShown() const { return showDebugUI_; }
