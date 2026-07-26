@@ -26,7 +26,7 @@ void main_loop() {
     }
 
     if (g_cube) {
-        float t = (float)SDL_GetPerformanceCounter() / (float)SDL_GetPerformanceFrequency();
+        float t = (float)g_renderer->GetWindow()->GetTime();
         g_cube->SetRotation(glm::vec3(t * 50.0f, t * 30.0f, 0.0f));
     }
 
