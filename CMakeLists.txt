@@ -69,11 +69,17 @@ file(GLOB_RECURSE IMGUI_SOURCE_FILES
 # ============================================================
 # FenixWeb executable
 # ============================================================
-add_executable(FenixWeb
-    WIN32
-    ${IMGUI_SOURCE_FILES}
-    main.cpp
-)
+if(EMSCRIPTEN)
+    add_executable(FenixWeb
+        ${IMGUI_SOURCE_FILES}
+        main.cpp
+    )
+else()
+    add_executable(FenixWeb WIN32
+        ${IMGUI_SOURCE_FILES}
+        main.cpp
+    )
+endif()
 
 target_include_directories(FenixWeb PRIVATE
     ${ENGINE_DIR}
