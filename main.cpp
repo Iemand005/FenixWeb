@@ -14,6 +14,7 @@
 using namespace fe;
 
 static Renderer* g_renderer = nullptr;
+static Object* g_cube = nullptr;
 
 void main_loop() {
     if (!g_renderer) return;
@@ -22,6 +23,11 @@ void main_loop() {
     if (window && window->ShouldClose()) {
         emscripten_cancel_main_loop();
         return;
+    }
+
+    if (g_cube) {
+        float t = (float)SDL_GetPerformanceCounter() / (float)SDL_GetPerformanceFrequency();
+        g_cube->SetRotation(glm::vec3(t * 50.0f, t * 30.0f, 0.0f));
     }
 
     g_renderer->Redraw();
@@ -106,8 +112,8 @@ int main() {
     // Create scene with a cube
     g_renderer->scene = std::make_unique<Scene>();
     auto cube = CreateCube();
-    auto obj = g_renderer->scene->AddObject(std::move(cube));
-    obj->color = glm::vec3(1.0f, 0.2f, 0.2f);
+    g_cube = g_renderer->scene->AddObject(std::move(cube)).get();
+    g_cube->color = glm::vec3(1.0f, 0.2f, 0.2f);
 
     std::cout << "FenixWeb: initialized - rendering red cube on WebGL 2" << std::endl;
 
