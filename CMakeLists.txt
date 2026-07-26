@@ -4,36 +4,45 @@ project(FenixWeb LANGUAGES CXX C)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Force Emscripten-friendly settings
+# ============================================================
+# EMScripten / WebAssembly specific configuration
+# ============================================================
 if(EMSCRIPTEN)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -sUSE_SDL=2 -sUSE_WEBGL2=1 -sFULL_ES3=1")
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -sUSE_SDL=2 -sUSE_WEBGL2=1 -sFULL_ES3=1")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -sALLOW_MEMORY_GROWTH=1 -sEXPORTED_RUNTIME_METHODS=['ccall','cwrap']")
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -sALLOW_MEMORY_GROWTH=1 -sEXPORTED_RUNTIME_METHODS=['ccall','cwrap']")
+    set(CMAKE_EXECUTABLE_SUFFIX ".html")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s USE_SDL=3 -s USE_WEBGL2=1 -s FULL_ES3=1 -s GL_ENABLE_GET_PROC_ADDRESS=1")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s EXPORTED_RUNTIME_METHODS=['ccall','cwrap'] -s EXPORTED_FUNCTIONS=['_main']")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s ALLOW_MEMORY_GROWTH=1 -s INITIAL_MEMORY=64MB")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s NO_EXIT_RUNTIME=1 -s EXIT_RUNTIME=0")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s LEGACY_GL_EMULATION=0 -s GL_UNSAFE_OPTS=0")
+    # WebGL 2 / OpenGL ES 3.0
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s MAX_WEBGL_VERSION=2 -s MIN_WEBGL_VERSION=2")
+    # Reduce binary size
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Os -flto")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s MODULARIZE=1 -s EXPORT_NAME=FenixWeb")
 endif()
 
-# Exclude native-only subsystems
-set(FE_EXCLUDE_GLFW ON CACHE BOOL "Exclude GLFW" FORCE)
-set(FE_EXCLUDE_JOLT ON CACHE BOOL "Exclude JOLT Physics" FORCE)
+# ============================================================
+# Engine configuration - matches what other games do
+# ============================================================
+set(FE_EXCLUDE_GLFW ON CACHE BOOL "Exclude GLFW from the build" FORCE)
+set(FE_EXCLUDE_JOLT ON CACHE BOOL "Exclude JOLT physics from the build" FORCE)
 set(FE_INCLUDE_OPENVR OFF CACHE BOOL "Include OpenVR" FORCE)
 
-# Disable WASAPI/GameInput on non-Windows
+# Disable Vulkan entirely
 set(SDL_WASAPI OFF CACHE BOOL "" FORCE)
 set(SDL_GAMEINPUT OFF CACHE BOOL "" FORCE)
-set(SDL_JOYSTICK OFF CACHE BOOL "" FORCE)
+set(SDL_JOYSTICK ON CACHE BOOL "" FORCE)
 
-# Static libs
-set(KISSFFT_STATIC ON CACHE BOOL "Build static library" FORCE)
-set(GLFW_LIBRARY_TYPE "STATIC" CACHE STRING "" FORCE)
+# Force OpenGL backend only
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DFE_EXCLUDE_GLFW -DFE_EXCLUDE_JOLT")
 
-# SDL3 for Emscripten uses SDL2 compat
-set(SDL_SHARED DEFAULT CACHE BOOL "" FORCE)
-set(SDL_STATIC DEFAULT CACHE BOOL "" FORCE)
-
+# ============================================================
+# Engine path
+# ============================================================
 set(ENGINE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../FenixEngine")
 
 if(NOT TARGET Engine)
-    message(STATUS "Engine target not found. Adding FenixEngine subdirectory...")
+    message(STATUS "Engine target not found. Adding FenixEngine from ${ENGINE_DIR}")
     if(EXISTS "${ENGINE_DIR}/CMakeLists.txt")
         add_subdirectory("${ENGINE_DIR}" FenixEngine)
     else()
@@ -41,8 +50,26 @@ if(NOT TARGET Engine)
     endif()
 endif()
 
-# FenixWeb executable - minimal, no ImGui, no Vulkan
+# ============================================================
+# ImGui (optional - for web debugging UI)
+# ============================================================
+set(IMGUI_DIR ../FenixEngine/external/imgui)
+
+file(GLOB_RECURSE IMGUI_SOURCE_FILES
+    ${IMGUI_DIR}/imgui.cpp
+    ${IMGUI_DIR}/backends/imgui_impl_sdl3.cpp
+    ${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp
+    ${IMGUI_DIR}/imgui_tables.cpp
+    ${IMGUI_DIR}/imgui_widgets.cpp
+    ${IMGUI_DIR}/imgui_draw.cpp
+)
+
+# ============================================================
+# FenixWeb executable
+# ============================================================
 add_executable(FenixWeb
+    WIN32
+    ${IMGUI_SOURCE_FILES}
     main.cpp
 )
 
@@ -50,6 +77,7 @@ target_include_directories(FenixWeb PRIVATE
     ${ENGINE_DIR}
     ${ENGINE_DIR}/include
     ${ENGINE_DIR}/external
+    ${ENGINE_DIR}/external/imgui
     ${ENGINE_DIR}/external/SDL/include
     ${ENGINE_DIR}/src/Engine
 )
@@ -58,12 +86,9 @@ target_link_libraries(FenixWeb PRIVATE
     Engine
 )
 
-# Emscripten output settings
-if(EMSCRIPTEN)
-    set_target_properties(FenixWeb PROPERTIES
-        SUFFIX ".html"
-        LINK_FLAGS "-sEXPORTED_FUNCTIONS=['_main','_malloc','_free'] -sEXPORTED_RUNTIME_METHODS=['ccall','cwrap']"
-    )
+if(MSVC)
+    target_compile_options(FenixWeb PRIVATE $<$<CONFIG:Debug>:/Zi>)
+    target_link_options(FenixWeb PRIVATE $<$<CONFIG:Debug>:/DEBUG>)
 endif()
 
 # Copy resources
@@ -73,3 +98,18 @@ add_custom_command(TARGET FenixWeb POST_BUILD
         $<TARGET_FILE_DIR:FenixWeb>/resources
     COMMENT "Copying FenixWeb resources..."
 )
+
+# EMScripten-specific: output to .html with JS/WASM
+if(EMSCRIPTEN)
+    set_target_properties(FenixWeb PROPERTIES
+        SUFFIX ".html"
+        LINK_FLAGS "-s USE_SDL=3 -s USE_WEBGL2=1 -s FULL_ES3=1 -s GL_ENABLE_GET_PROC_ADDRESS=1
+                    -s ALLOW_MEMORY_GROWTH=1 -s INITIAL_MEMORY=64MB
+                    -s NO_EXIT_RUNTIME=1 -s EXIT_RUNTIME=0
+                    -s EXPORTED_RUNTIME_METHODS=['ccall','cwrap']
+                    -s EXPORTED_FUNCTIONS=['_main']
+                    -s MODULARIZE=1 -s EXPORT_NAME=FenixWeb
+                    -s MAX_WEBGL_VERSION=2 -s MIN_WEBGL_VERSION=2
+                    -Os -flto"
+    )
+endif()
