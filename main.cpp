@@ -28,7 +28,7 @@ int main() {
     ;printf("Heey")
 ;    // Initialize SDL
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
-        std::cerr << "SDL_Init failed: " << SDL_GetError() << std::endl;
+        std::cerr << "SDL_Init failed wawa: " << SDL_GetError() << std::endl;
         return 1;
     }
     
