@@ -6,6 +6,7 @@
 #include <emscripten/html5.h>
 #include <glad/glad.h>
 #include <iostream>
+#include <cstdio>
 
 using namespace fe;
 
@@ -24,11 +25,22 @@ void main_loop() {
 }
 
 int main() {
-    std::cout << "HELLOOOOO"
-    ;printf("Heey")
-;    // Initialize SDL
+#ifdef __EMSCRIPTEN__
+    // Disable buffering so cout/cerr/printf show in browser console
+    setvbuf(stdout, nullptr, _IONBF, 0);
+    setvbuf(stderr, nullptr, _IONBF, 0);
+    emscripten_log(EMLOG_LOG, "FenixWeb: starting up...");
+#endif
+
+    std::cout << "FenixWeb: starting up..." << std::endl;
+
+    // Initialize SDL
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
-        std::cerr << "SDL_Init failed wawa: " << SDL_GetError() << std::endl;
+        const char* err = SDL_GetError();
+        std::cerr << "SDL_Init failed: " << (err ? err : "(null)") << std::endl;
+#ifdef __EMSCRIPTEN__
+        emscripten_log(EMLOG_ERROR, "SDL_Init failed: %s", err ? err : "(null)");
+#endif
         return 1;
     }
     
