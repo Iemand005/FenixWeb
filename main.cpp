@@ -20,13 +20,24 @@ void main_loop() {
     if (!g_renderer) return;
 
     auto* window = g_renderer->GetWindow();
-    if (window && window->ShouldClose()) {
-        emscripten_cancel_main_loop();
-        return;
+    if (!window) return;
+
+    SDL_Event event;
+    while (SDL_PollEvent(&event)) {
+        if (event.type == SDL_EVENT_QUIT) {
+            emscripten_cancel_main_loop();
+            return;
+        }
+        if (event.type == SDL_EVENT_WINDOW_RESIZED) {
+            int w = event.window.data1;
+            int h = event.window.data2;
+            emscripten_set_canvas_element_size("#canvas", w, h);
+            if (g_renderer) g_renderer->Resize(w, h);
+        }
     }
 
     if (g_cube) {
-        float t = (float)g_renderer->GetWindow()->GetTime();
+        float t = (float)window->GetTime();
         g_cube->SetRotation(glm::vec3(t * 50.0f, t * 30.0f, 0.0f));
     }
 
@@ -90,18 +101,29 @@ int main() {
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
 
+    // Read actual canvas pixel size — CSS size reflects the fullscreen layout
+    double cssW = 0, cssH = 0;
+    emscripten_get_element_css_size("#canvas", &cssW, &cssH);
+    int canvasW = cssW > 0 ? (int)cssW : 800;
+    int canvasH = cssH > 0 ? (int)cssH : 600;
+
     // Create renderer (loads GLAD + creates OpenGLRenderDevice)
     g_renderer = new Renderer(SDL_GL_GetProcAddress);
 
-    // Create window through engine (sets up GL context properly)
-    g_renderer->NewWindow(800, 600, false, false, false);
+    // Create window at actual canvas size
+    g_renderer->NewWindow(canvasW, canvasH, false, false, false);
+
+    // SDL_CreateWindow may have overridden the canvas size — restore fullscreen
+    emscripten_set_canvas_element_size("#canvas", canvasW, canvasH);
+    g_renderer->Resize(canvasW, canvasH);
 
     // Red clear color
     g_renderer->SetClearColor(1.0f, 0.0f, 0.0f, 1.0f);
 
-    // Create camera
+    // Create camera with correct initial aspect ratio
     g_renderer->camera = std::make_unique<Camera>(45.0f, 0.1f, 100.0f);
     g_renderer->camera->SetPos(glm::vec3(0.0f, 0.0f, 3.0f));
+    g_renderer->camera->SetAspect(canvasW, canvasH);
 
     // Load shaders
     g_renderer->LoadShaders(
@@ -115,7 +137,7 @@ int main() {
     g_cube = g_renderer->scene->AddObject(std::move(cube)).get();
     g_cube->color = glm::vec3(1.0f, 0.2f, 0.2f);
 
-    std::cout << "FenixWeb: initialized - rendering red cube on WebGL 2" << std::endl;
+    std::cout << "FenixWeb: initialized at " << canvasW << "x" << canvasH << std::endl;
 
     // Run main loop
     emscripten_set_main_loop(main_loop, 0, 1);
