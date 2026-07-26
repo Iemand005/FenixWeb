@@ -88,19 +88,22 @@ if(MSVC)
     target_link_options(FenixWeb PRIVATE $<$<CONFIG:Debug>:/DEBUG>)
 endif()
 
-# Copy resources
-add_custom_command(TARGET FenixWeb POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-        ${CMAKE_CURRENT_SOURCE_DIR}/resources
-        $<TARGET_FILE_DIR:FenixWeb>/resources
-    COMMENT "Copying FenixWeb resources..."
-)
-
 # EMScripten-specific: linker flags only (NO -s USE_SDL=3, Engine builds SDL from source)
 if(EMSCRIPTEN)
     set(CMAKE_EXECUTABLE_SUFFIX ".html")
     set_target_properties(FenixWeb PROPERTIES
         SUFFIX ".html"
         LINK_FLAGS "-s USE_WEBGL2=1 -s FULL_ES3=1 -sGL_ENABLE_GET_PROC_ADDRESS=1 -s ALLOW_MEMORY_GROWTH=1 -s INITIAL_MEMORY=64MB -s NO_EXIT_RUNTIME=1 -s EXIT_RUNTIME=0 -s MAX_WEBGL_VERSION=2 -s MIN_WEBGL_VERSION=2 -sFORCE_FILESYSTEM=1 --preload-file ${CMAKE_CURRENT_SOURCE_DIR}/resources@resources -Os -flto"
+    )
+
+    # Deploy to dist/ for GitHub Pages (only html + js + wasm + data)
+    set(DIST_DIR "${CMAKE_CURRENT_SOURCE_DIR}/dist")
+    add_custom_command(TARGET FenixWeb POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${DIST_DIR}"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE_DIR:FenixWeb>/FenixWeb.html" "${DIST_DIR}/index.html"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE_DIR:FenixWeb>/FenixWeb.js" "${DIST_DIR}/FenixWeb.js"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE_DIR:FenixWeb>/FenixWeb.wasm" "${DIST_DIR}/FenixWeb.wasm"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE_DIR:FenixWeb>/FenixWeb.data" "${DIST_DIR}/FenixWeb.data"
+        COMMENT "Deploying to dist/ for GitHub Pages..."
     )
 endif()
