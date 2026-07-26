@@ -34,7 +34,7 @@ int main() {
     std::cout << "FenixWeb: starting up..." << std::endl;
 
     // Initialize SDL
-    if (SDL_Init(SDL_INIT_VIDEO) != 0) {
+    if (!SDL_Init(SDL_INIT_VIDEO)) {
         const char* err = SDL_GetError();
         std::cerr << "SDL_Init failed: " << (err ? err : "(null)") << std::endl;
         return 1;
