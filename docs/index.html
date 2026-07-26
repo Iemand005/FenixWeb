@@ -12,8 +12,7 @@
   <body>
     <canvas id="canvas" oncontextmenu="event.preventDefault()" tabindex="-1"></canvas>
     <script>
-      var statusElement = document.getElementById("status"),
-        canvasElement = document.getElementById("canvas"),
+      var canvasElement = document.getElementById("canvas"),
         Module = {
           print: (...e) => console.log(...e),
           printErr: (...e) => console.error(...e),
@@ -24,14 +23,7 @@
           monitorRunDependencies(e) {}
         };
 
-      window.addEventListener("resize", () => {
-        canvasElement.width = window.innerWidth;
-        canvasElement.height = window.innerHeight;
-      });
-      canvasElement.width = window.innerWidth;
-      canvasElement.height = window.innerHeight;
-
-      window.onerror = () => spinnerElement && (spinnerElement.style.display = "none");
+      window.onerror = () => {};
     </script>
     <script async src="FenixWeb.js"></script>
   </body>
