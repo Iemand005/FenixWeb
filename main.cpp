@@ -24,7 +24,8 @@ void main_loop() {
 }
 
 int main() {
-    // Initialize SDL
+    std::cout << "HELLOOOOO"
+;    // Initialize SDL
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         std::cerr << "SDL_Init failed: " << SDL_GetError() << std::endl;
         return 1;
