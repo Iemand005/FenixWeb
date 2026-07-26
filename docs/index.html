@@ -7,10 +7,29 @@
       * { margin: 0; padding: 0; }
       html, body { width: 100%; height: 100%; overflow: hidden; background: #000; }
       #canvas { display: block; width: 100%; height: 100%; }
+      #toggle-imgui {
+        position: fixed;
+        top: 12px;
+        right: 12px;
+        z-index: 100;
+        padding: 8px 16px;
+        background: rgba(30, 30, 30, 0.85);
+        color: #ff6600;
+        border: 1px solid #ff6600;
+        border-radius: 6px;
+        font-family: monospace;
+        font-size: 13px;
+        cursor: pointer;
+        user-select: none;
+        transition: background 0.15s;
+      }
+      #toggle-imgui:hover { background: rgba(255, 102, 0, 0.2); }
+      #toggle-imgui.active { background: rgba(255, 102, 0, 0.35); }
     </style>
   </head>
   <body>
     <canvas id="canvas" oncontextmenu="event.preventDefault()" tabindex="-1"></canvas>
+    <button id="toggle-imgui" onclick="toggleImGui()">Debug UI (F3)</button>
     <script>
       var canvasElement = document.getElementById("canvas"),
         Module = {
@@ -24,6 +43,15 @@
         };
 
       window.onerror = () => {};
+
+      function toggleImGui() {
+        if (typeof Module._ToggleImGui === 'function') {
+          Module._ToggleImGui();
+          var btn = document.getElementById('toggle-imgui');
+          var visible = Module._IsImGuiVisible();
+          btn.classList.toggle('active', visible === 1);
+        }
+      }
     </script>
     <script async src="FenixWeb.js"></script>
   </body>
