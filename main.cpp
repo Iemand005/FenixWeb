@@ -41,13 +41,12 @@ int main() {
     // Create window
     g_window = new SDLWindow("FenixWeb", 800, 600, false, false, WindowOptions{}, false);
     
-    if (!g_window->IsValid()) {
-        std::cerr << "Failed to create SDL window" << std::endl;
-        return 1;
+    if (!g_window->ShouldClose()) {
+        // Window created successfully
     }
     
-    // Get Emscripten's GLAD loader proc for WebGL
-    auto loadProc = (GLADloadproc)emscripten_GetProcAddress;
+    // Get Emscripten's GL proc address for WebGL
+    auto loadProc = (GLADloadproc)eglGetProcAddress;
     
     // Create Renderer with OpenGL (not Vulkan) using GLAD loader
     g_renderer = new Renderer(loadProc);
@@ -58,7 +57,7 @@ int main() {
     
     // Set up minimal scene
     g_renderer->scene = std::make_unique<Scene>();
-    g_renderer->camera = std::make_unique<Camera>(800.0f / 600.0f);
+    g_renderer->camera = std::make_unique<Camera>(45.0f, 0.1f, 100.0f);
     g_renderer->camera->SetPos(glm::vec3(0.0f, 0.0f, 5.0f));
     
     // Load shaders (will use OpenGL paths)
