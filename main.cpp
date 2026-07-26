@@ -45,8 +45,8 @@ int main() {
         // Window created successfully
     }
     
-    // Get Emscripten's GL proc address for WebGL
-    auto loadProc = (GLADloadproc)eglGetProcAddress;
+    // Get Emscripten's GL proc address for WebGL via SDL
+    auto loadProc = (GLADloadproc)SDL_GL_GetProcAddress;
     
     // Create Renderer with OpenGL (not Vulkan) using GLAD loader
     g_renderer = new Renderer(loadProc);

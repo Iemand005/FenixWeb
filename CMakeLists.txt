@@ -5,24 +5,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # ============================================================
-# EMScripten / WebAssembly specific configuration
-# ============================================================
-if(EMSCRIPTEN)
-    set(CMAKE_EXECUTABLE_SUFFIX ".html")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s USE_SDL=3 -s USE_WEBGL2=1 -s FULL_ES3=1 -s GL_ENABLE_GET_PROC_ADDRESS=1")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s EXPORTED_RUNTIME_METHODS=['ccall','cwrap'] -s EXPORTED_FUNCTIONS=['_main']")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s ALLOW_MEMORY_GROWTH=1 -s INITIAL_MEMORY=64MB")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s NO_EXIT_RUNTIME=1 -s EXIT_RUNTIME=0")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s LEGACY_GL_EMULATION=0 -s GL_UNSAFE_OPTS=0")
-    # WebGL 2 / OpenGL ES 3.0
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s MAX_WEBGL_VERSION=2 -s MIN_WEBGL_VERSION=2")
-    # Reduce binary size
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Os -flto")
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s MODULARIZE=1 -s EXPORT_NAME=FenixWeb")
-endif()
-
-# ============================================================
-# Engine configuration - matches what other games do
+# Engine configuration - must be set before add_subdirectory
 # ============================================================
 set(FE_EXCLUDE_GLFW ON CACHE BOOL "Exclude GLFW from the build" FORCE)
 set(FE_EXCLUDE_JOLT ON CACHE BOOL "Exclude JOLT physics from the build" FORCE)
@@ -30,13 +13,9 @@ set(FE_EXCLUDE_VULKAN ON CACHE BOOL "Exclude Vulkan from the build" FORCE)
 set(FE_EXCLUDE_OPENXR ON CACHE BOOL "Exclude OpenXR from the build" FORCE)
 set(FE_INCLUDE_OPENVR OFF CACHE BOOL "Include OpenVR" FORCE)
 
-# Disable Vulkan entirely
 set(SDL_WASAPI OFF CACHE BOOL "" FORCE)
 set(SDL_GAMEINPUT OFF CACHE BOOL "" FORCE)
 set(SDL_JOYSTICK ON CACHE BOOL "" FORCE)
-
-# Force OpenGL backend only
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DFE_EXCLUDE_GLFW -DFE_EXCLUDE_JOLT")
 
 # ============================================================
 # Engine path
@@ -107,17 +86,32 @@ add_custom_command(TARGET FenixWeb POST_BUILD
     COMMENT "Copying FenixWeb resources..."
 )
 
-# EMScripten-specific: output to .html with JS/WASM
+# EMScripten-specific: all -s flags go in linker flags only
 if(EMSCRIPTEN)
+    set(CMAKE_EXECUTABLE_SUFFIX ".html")
+
+    set(EMSCRIPTEN_LINK_FLAGS
+        "-s USE_SDL=3"
+        "-s USE_WEBGL2=1"
+        "-s FULL_ES3=1"
+        "-s GL_ENABLE_GET_PROC_ADDRESS=1"
+        "-s ALLOW_MEMORY_GROWTH=1"
+        "-s INITIAL_MEMORY=64MB"
+        "-s NO_EXIT_RUNTIME=1"
+        "-s EXIT_RUNTIME=0"
+        "-s EXPORTED_RUNTIME_METHODS=['ccall','cwrap']"
+        "-s EXPORTED_FUNCTIONS=['_main']"
+        "-s MODULARIZE=1"
+        "-s EXPORT_NAME=FenixWeb"
+        "-s MAX_WEBGL_VERSION=2"
+        "-s MIN_WEBGL_VERSION=2"
+        "-Os"
+        "-flto"
+    )
+    string(REPLACE ";" " " EMSCRIPTEN_LINK_FLAGS_STR "${EMSCRIPTEN_LINK_FLAGS}")
+
     set_target_properties(FenixWeb PROPERTIES
         SUFFIX ".html"
-        LINK_FLAGS "-s USE_SDL=3 -s USE_WEBGL2=1 -s FULL_ES3=1 -s GL_ENABLE_GET_PROC_ADDRESS=1
-                    -s ALLOW_MEMORY_GROWTH=1 -s INITIAL_MEMORY=64MB
-                    -s NO_EXIT_RUNTIME=1 -s EXIT_RUNTIME=0
-                    -s EXPORTED_RUNTIME_METHODS=['ccall','cwrap']
-                    -s EXPORTED_FUNCTIONS=['_main']
-                    -s MODULARIZE=1 -s EXPORT_NAME=FenixWeb
-                    -s MAX_WEBGL_VERSION=2 -s MIN_WEBGL_VERSION=2
-                    -Os -flto"
+        LINK_FLAGS "${EMSCRIPTEN_LINK_FLAGS_STR}"
     )
 endif()
