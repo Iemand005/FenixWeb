@@ -15,8 +15,7 @@ namespace fe {
 		bool showDebugUI_ = true;
 
 	public:
-		template<typename F, typename = std::enable_if_t<std::is_convertible_v<F, GLADloadproc>>>
-		FenixWebGame(F loadProc) : Renderer(loadProc) {}
+		using Renderer::Renderer;
 
 		void ToggleDebugUI() { showDebugUI_ = !showDebugUI_; }
 		bool IsDebugUIShown() const { return showDebugUI_; }

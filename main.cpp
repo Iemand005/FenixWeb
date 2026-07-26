@@ -6,6 +6,8 @@
 #include "window/SDLWindow.hpp"
 #include <emscripten/emscripten.h>
 #include <emscripten/html5.h>
+
+#define LOG(fmt, ...) do { fprintf(stderr, fmt "\n", ##__VA_ARGS__); fflush(stderr); } while(0)
 #include <glad/glad.h>
 #include <iostream>
 #include <cstdio>
@@ -32,7 +34,7 @@ static void SyncCanvasSize() {
         if (g_game) g_game->Resize(w, h);
         g_lastW = w;
         g_lastH = h;
-        std::cout << "[resize] canvas -> " << w << "x" << h << std::endl;
+        LOG( "[FenixWeb] resize -> %dx%d", w, h);
     }
 }
 
@@ -42,7 +44,7 @@ void main_loop() {
     auto* window = g_game->GetWindow();
     if (!window) {
         static int warned = 0;
-        if (!warned) { std::cerr << "[loop] NO WINDOW!" << std::endl; warned = 1; }
+        if (!warned) { LOG( "[FenixWeb] NO WINDOW!"); warned = 1; }
         return;
     }
 
@@ -89,12 +91,11 @@ void main_loop() {
         static int frameCount = 0;
         if (frameCount < 3) {
             GLenum err = glGetError();
-            std::cout << "[loop] frame " << frameCount
-                      << " scene=" << (void*)g_game->scene.get()
-                      << " objects=" << (g_game->scene ? g_game->scene->GetObjects().size() : 0)
-                      << " shader=" << (void*)g_game->shader.get()
-                      << " camera=" << (void*)g_game->camera.get()
-                      << " glError=0x" << std::hex << err << std::dec << std::endl;
+            LOG( "[FenixWeb] frame %d objects=%d shader=%p glError=0x%x",
+                frameCount,
+                g_game->scene ? (int)g_game->scene->GetObjects().size() : 0,
+                (void*)g_game->shader.get(),
+                (unsigned)err);
             frameCount++;
         }
     }
@@ -146,14 +147,14 @@ int main() {
     setvbuf(stderr, nullptr, _IONBF, 0);
 #endif
 
-    std::cout << "FenixWeb: starting up..." << std::endl;
+    LOG( "[FenixWeb] starting up...");
 
     if (!SDL_Init(SDL_INIT_VIDEO)) {
         const char* err = SDL_GetError();
-        std::cerr << "SDL_Init failed: " << (err ? err : "(null)") << std::endl;
+        LOG( "[FenixWeb] SDL_Init FAILED: %s", err ? err : "(null)");
         return 1;
     }
-    std::cout << "[init] SDL_Init OK" << std::endl;
+    LOG( "[FenixWeb] SDL_Init OK");
 
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
@@ -161,57 +162,56 @@ int main() {
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+    LOG( "[FenixWeb] GL attrs set");
 
     double cssW = 0, cssH = 0;
     emscripten_get_element_css_size("#canvas", &cssW, &cssH);
     int initW = cssW > 0 ? (int)cssW : 800;
     int initH = cssH > 0 ? (int)cssH : 600;
-    std::cout << "[init] CSS size: " << initW << "x" << initH << std::endl;
+    LOG( "[FenixWeb] CSS size: %dx%d", initW, initH);
 
-    std::cout << "[init] Creating FenixWebGame..." << std::endl;
+    LOG( "[FenixWeb] Creating FenixWebGame...");
     g_game = new FenixWebGame(SDL_GL_GetProcAddress);
-    std::cout << "[init] FenixWebGame created. scene=" << (void*)g_game->scene.get()
-              << " camera=" << (void*)g_game->camera.get()
-              << " renderDevice=" << (void*)g_game->renderDevice.get() << std::endl;
+    LOG( "[FenixWeb] FenixWebGame created");
 
-    std::cout << "[init] Creating window " << initW << "x" << initH << "..." << std::endl;
+    LOG( "[FenixWeb] Creating window %dx%d...", initW, initH);
     g_game->NewWindow(initW, initH, false, false, false);
-    std::cout << "[init] Window created. windows=" << g_game->windows.size() << std::endl;
+    LOG( "[FenixWeb] Window created. count=%d", (int)g_game->windows.size());
 
     emscripten_set_canvas_element_size("#canvas", initW, initH);
     g_game->Resize(initW, initH);
     g_lastW = initW;
     g_lastH = initH;
+    LOG( "[FenixWeb] Canvas resized & viewport set");
 
-    std::cout << "[init] Initializing ImGui..." << std::endl;
+    LOG( "[FenixWeb] Initializing ImGui...");
     g_game->InitImGui();
-    std::cout << "[init] ImGui initialized." << std::endl;
+    LOG( "[FenixWeb] ImGui initialized");
 
     g_game->SetClearColor(1.0f, 0.0f, 0.0f, 1.0f);
-    std::cout << "[init] Clear color set to red." << std::endl;
+    LOG( "[FenixWeb] Clear color = red");
 
     g_game->camera = std::make_unique<Camera>(45.0f, 0.1f, 100.0f);
     g_game->camera->SetPos(glm::vec3(0.0f, 0.0f, 3.0f));
     g_game->camera->SetAspect(initW, initH);
-    std::cout << "[init] Camera set up. pos=(0,0,3) fov=45 near=0.1 far=100 aspect=" << initW << "/" << initH << std::endl;
+    LOG( "[FenixWeb] Camera set up");
 
-    std::cout << "[init] Loading shaders..." << std::endl;
+    LOG( "[FenixWeb] Loading shaders...");
     g_game->LoadShaders(
         "resources/shaders/VertexShader.glsl",
         "resources/shaders/FragmentShader.glsl"
     );
-    std::cout << "[init] Shaders loaded. shader=" << (void*)g_game->shader.get() << std::endl;
+    LOG( "[FenixWeb] Shaders loaded. shader=%p", (void*)g_game->shader.get());
 
     g_game->scene = std::make_unique<Scene>();
-    std::cout << "[init] Scene created." << std::endl;
+    LOG( "[FenixWeb] Scene created");
 
     auto cube = CreateCube();
     g_cube = g_game->scene->AddObject(std::move(cube)).get();
     g_cube->color = glm::vec3(1.0f, 0.2f, 0.2f);
-    std::cout << "[init] Cube added. scene objects=" << g_game->scene->GetObjects().size() << std::endl;
+    LOG( "[FenixWeb] Cube added. objects=%d", (int)g_game->scene->GetObjects().size());
 
-    std::cout << "FenixWeb: initialized at " << initW << "x" << initH << std::endl;
-
+    LOG( "[FenixWeb] Starting main loop...");
     emscripten_set_main_loop(main_loop, 0, 1);
 
     delete g_game;
