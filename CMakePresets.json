@@ -1,14 +1,26 @@
 {
-  "version": 3,
-  "configurePresets": [
-    {
-      "name": "emscripten",
-      "displayName": "Emscripten WebAssembly",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build-emscripten",
-      "cacheVariables": {
-        "CMAKE_TOOLCHAIN_FILE": "J:/emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake"
-      }
-    }
-  ]
+	"version": 3,
+	"configurePresets": [
+		{
+			"name": "default",
+			"displayName": "Emscripten",
+			"generator": "Ninja",
+			"binaryDir": "${sourceDir}/build-emscripten",
+			"cacheVariables": {
+				"CMAKE_TOOLCHAIN_FILE": "J:/emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake"
+			}
+		}
+	],
+	"buildPresets": [
+		{
+				"name": "Debug",
+				"configurePreset": "default",
+				"configuration": "Debug"
+		},
+		{
+				"name": "Release",
+				"configurePreset": "default",
+				"configuration": "Release"
+		}
+	]
 }
