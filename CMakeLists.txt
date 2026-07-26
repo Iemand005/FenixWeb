@@ -27,6 +27,7 @@ endif()
 set(FE_EXCLUDE_GLFW ON CACHE BOOL "Exclude GLFW from the build" FORCE)
 set(FE_EXCLUDE_JOLT ON CACHE BOOL "Exclude JOLT physics from the build" FORCE)
 set(FE_EXCLUDE_VULKAN ON CACHE BOOL "Exclude Vulkan from the build" FORCE)
+set(FE_EXCLUDE_OPENXR ON CACHE BOOL "Exclude OpenXR from the build" FORCE)
 set(FE_INCLUDE_OPENVR OFF CACHE BOOL "Include OpenVR" FORCE)
 
 # Disable Vulkan entirely
