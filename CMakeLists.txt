@@ -71,6 +71,7 @@ target_include_directories(FenixWeb PRIVATE
 
 target_link_libraries(FenixWeb PRIVATE
     Engine
+    Renderer
 )
 
 if(EMSCRIPTEN)
@@ -94,32 +95,11 @@ add_custom_command(TARGET FenixWeb POST_BUILD
     COMMENT "Copying FenixWeb resources..."
 )
 
-# EMScripten-specific: all -s flags go in linker flags only
+# EMScripten-specific: linker flags only (NO -s USE_SDL=3, Engine builds SDL from source)
 if(EMSCRIPTEN)
     set(CMAKE_EXECUTABLE_SUFFIX ".html")
-
-    set(EMSCRIPTEN_LINK_FLAGS
-        "SHELL:-s USE_SDL=3"
-        "SHELL:-s USE_WEBGL2=1"
-        "SHELL:-s FULL_ES3=1"
-        "SHELL:-s GL_ENABLE_GET_PROC_ADDRESS=1"
-        "SHELL:-s ALLOW_MEMORY_GROWTH=1"
-        "SHELL:-s INITIAL_MEMORY=64MB"
-        "SHELL:-s NO_EXIT_RUNTIME=1"
-        "SHELL:-s EXIT_RUNTIME=0"
-        "SHELL:-s EXPORTED_RUNTIME_METHODS=['ccall','cwrap']"
-        "SHELL:-s EXPORTED_FUNCTIONS=['_main']"
-        "SHELL:-s MODULARIZE=1"
-        "SHELL:-s EXPORT_NAME=FenixWeb"
-        "SHELL:-s MAX_WEBGL_VERSION=2"
-        "SHELL:-s MIN_WEBGL_VERSION=2"
-        "-Os"
-        "-flto"
-    )
-    string(REPLACE ";" " " EMSCRIPTEN_LINK_FLAGS_STR "${EMSCRIPTEN_LINK_FLAGS}")
-
     set_target_properties(FenixWeb PROPERTIES
         SUFFIX ".html"
-        LINK_FLAGS "-s USE_SDL=3 -s USE_WEBGL2=1 -s FULL_ES3=1 -sGL_ENABLE_GET_PROC_ADDRESS=1 -s ALLOW_MEMORY_GROWTH=1 -s INITIAL_MEMORY=64MB -s NO_EXIT_RUNTIME=1 -s EXIT_RUNTIME=0 -s MAX_WEBGL_VERSION=2 -s MIN_WEBGL_VERSION=2 -Os -flto"
+        LINK_FLAGS "-s USE_WEBGL2=1 -s FULL_ES3=1 -sGL_ENABLE_GET_PROC_ADDRESS=1 -s ALLOW_MEMORY_GROWTH=1 -s INITIAL_MEMORY=64MB -s NO_EXIT_RUNTIME=1 -s EXIT_RUNTIME=0 -s MAX_WEBGL_VERSION=2 -s MIN_WEBGL_VERSION=2 -Os -flto"
     )
 endif()

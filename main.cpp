@@ -4,6 +4,7 @@
 #include "window/SDLWindow.hpp"
 #include <emscripten/emscripten.h>
 #include <emscripten/html5.h>
+#include <emscripten/log.h>
 #include <glad/glad.h>
 #include <iostream>
 #include <cstdio>
