@@ -139,7 +139,7 @@ int main() {
     g_game = new FenixWebGame(options);
     std::cout << "[init] FenixWebGame created" << std::endl;
 
-    g_game->NewWindow(initW, initH, false, false, false);
+    // g_game->NewWindow(initW, initH, false, false, false);
     std::cout << "[init] Window created. windows=" << g_game->windows.size() << std::endl;
 
     emscripten_set_canvas_element_size("#canvas", initW, initH);
@@ -147,7 +147,7 @@ int main() {
     g_lastW = initW;
     g_lastH = initH;
 
-    g_game->InitImGui();
+    // g_game->InitImGui();
     std::cout << "[init] ImGui initialized" << std::endl;
 
     g_game->SetClearColor(1.0f, 0.0f, 0.0f, 1.0f);
