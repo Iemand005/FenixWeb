@@ -1,4 +1,5 @@
 #pragma once
+#include "XRGame.hpp"
 #define FE_EXCLUDE_GLFW
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
@@ -15,8 +16,7 @@ namespace fe {
 		bool showDebugUI_ = true;
 
 	public:
-		template<typename F>
-		FenixWebGame(F loadProc) : EditableGame(loadProc) {}
+		FenixWebGame(fe::XRGameOptions options) : EditableGame(options) {}
 
 		void ToggleDebugUI() { showDebugUI_ = !showDebugUI_; }
 		bool IsDebugUIShown() const { return showDebugUI_; }

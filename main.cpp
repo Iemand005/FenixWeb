@@ -4,6 +4,7 @@
 #include "Object.hpp"
 #include "Mesh.hpp"
 #include "Primitives.hpp"
+#include "XRGame.hpp"
 #include "window/SDLWindow.hpp"
 #include <emscripten/emscripten.h>
 #include <emscripten/html5.h>
@@ -132,7 +133,9 @@ int main() {
     int initH = cssH > 0 ? (int)cssH : 600;
     std::cout << "[init] CSS size: " << initW << "x" << initH << std::endl;
 
-    g_game = new FenixWebGame(reinterpret_cast<GLADloadproc>(SDL_GL_GetProcAddress));
+    fe::XRGameOptions options;
+    options.loadProc = reinterpret_cast<GLADloadproc>(SDL_GL_GetProcAddress);
+    g_game = new FenixWebGame(options);
     std::cout << "[init] FenixWebGame created" << std::endl;
 
     g_game->NewWindow(initW, initH, false, false, false);
