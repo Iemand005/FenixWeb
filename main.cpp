@@ -134,6 +134,7 @@ int main() {
     std::cout << "[init] CSS size: " << initW << "x" << initH << std::endl;
 
     fe::XRGameOptions options;
+    options.useVulkan = false; // TODO set vulkan false if glad loadproc is provided anways! or by defualt!;
     options.loadProc = reinterpret_cast<GLADloadproc>(SDL_GL_GetProcAddress);
     g_game = new FenixWebGame(options);
     std::cout << "[init] FenixWebGame created" << std::endl;
