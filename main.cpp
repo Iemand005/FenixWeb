@@ -132,7 +132,7 @@ int main() {
     int initH = cssH > 0 ? (int)cssH : 600;
     std::cout << "[init] CSS size: " << initW << "x" << initH << std::endl;
 
-    g_game = new FenixWebGame(SDL_GL_GetProcAddress);
+    g_game = new FenixWebGame(reinterpret_cast<GLADloadproc>(SDL_GL_GetProcAddress));
     std::cout << "[init] FenixWebGame created" << std::endl;
 
     g_game->NewWindow(initW, initH, false, false, false);

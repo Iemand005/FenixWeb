@@ -3,7 +3,7 @@
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 
-#include "Renderer.hpp"
+#include "Game.hpp"
 
 #include <imgui.h>
 #include <backends/imgui_impl_sdl3.h>
@@ -11,12 +11,12 @@
 
 namespace fe {
 
-	class FenixWebGame : public Renderer {
+	class FenixWebGame : public Game {
 		bool showDebugUI_ = true;
 
 	public:
 		template<typename F>
-		FenixWebGame(F loadProc) : Renderer(loadProc) {}
+		FenixWebGame(F loadProc) : Game(loadProc) {}
 
 		void ToggleDebugUI() { showDebugUI_ = !showDebugUI_; }
 		bool IsDebugUIShown() const { return showDebugUI_; }

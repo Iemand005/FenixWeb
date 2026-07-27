@@ -96,7 +96,7 @@ if(EMSCRIPTEN)
     # Release: -Oz for size, no debug info
     # -fdebug-compilation-dir helps Chrome DevTools map source paths correctly
     target_compile_options(FenixWeb PRIVATE
-        $<$<CONFIG:Debug>:-g -fdebug-compilation-dir=${CMAKE_CURRENT_SOURCE_DIR}>
+        $<$<CONFIG:Debug>:-g -fdebug-compilation-dir="..">
         $<$<CONFIG:Release>:-Oz>
     )
     target_link_options(FenixWeb PRIVATE
