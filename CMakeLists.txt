@@ -95,16 +95,15 @@ endif()
 if(EMSCRIPTEN)
     set(CMAKE_EXECUTABLE_SUFFIX ".html")
     
-    # Debug: -g for DWARF + source maps, no optimization
-    # Release: -Oz for size, no debug info
+    # Always include -g for debugging (single-config generator, CMAKE_BUILD_TYPE is empty)
     # -fdebug-compilation-dir helps Chrome DevTools map source paths correctly
     target_compile_options(FenixWeb PRIVATE
-        $<$<CONFIG:Debug>:-g -fdebug-compilation-dir="..">
-        $<$<CONFIG:Release>:-Oz>
+        -g
+        -fdebug-compilation-dir="${CMAKE_SOURCE_DIR}"
     )
     target_link_options(FenixWeb PRIVATE
-        $<$<CONFIG:Debug>:-g -gsource-map>
-        $<$<CONFIG:Release>:-Oz>
+        -g
+        -gsource-map
     )
     
     set_target_properties(FenixWeb PROPERTIES
