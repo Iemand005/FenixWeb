@@ -5,6 +5,9 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+# Ensure -g is in compile_commands.json for Debug
+set(CMAKE_CXX_FLAGS_DEBUG "-g")
+
 # ============================================================
 # Engine configuration - must be set before add_subdirectory
 # ============================================================
