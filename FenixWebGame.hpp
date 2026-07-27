@@ -8,6 +8,7 @@
 #include <imgui.h>
 #include <backends/imgui_impl_sdl3.h>
 #include <backends/imgui_impl_opengl3.h>
+#include <type_traits>
 
 namespace fe {
 
@@ -15,7 +16,8 @@ namespace fe {
 		bool showDebugUI_ = true;
 
 	public:
-		FenixWebGame(GLADloadproc loadProc) : Game(loadProc) {}
+		template<typename F>
+		FenixWebGame(F loadProc) : Game(reinterpret_cast<GLADloadproc>(loadProc)) {}
 
 		void ToggleDebugUI() { showDebugUI_ = !showDebugUI_; }
 		bool IsDebugUIShown() const { return showDebugUI_; }
