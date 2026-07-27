@@ -3,21 +3,20 @@
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 
-#include "XRGame.hpp"
+#include "Renderer.hpp"
 
 #include <imgui.h>
 #include <backends/imgui_impl_sdl3.h>
 #include <backends/imgui_impl_opengl3.h>
-#include <type_traits>
 
 namespace fe {
 
-	class FenixWebGame : public Game {
+	class FenixWebGame : public Renderer {
 		bool showDebugUI_ = true;
 
 	public:
 		template<typename F>
-		FenixWebGame(F loadProc) : Game(reinterpret_cast<GLADloadproc>(loadProc)) {}
+		FenixWebGame(F loadProc) : Renderer(loadProc) {}
 
 		void ToggleDebugUI() { showDebugUI_ = !showDebugUI_; }
 		bool IsDebugUIShown() const { return showDebugUI_; }
