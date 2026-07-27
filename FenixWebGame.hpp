@@ -32,39 +32,14 @@ namespace fe {
 
 			ImGui::StyleColorsDark();
 
-			float scale = SDL_GetWindowDisplayScale(window->GetWindow());
-			if (scale > 1.0f) {
-				io.FontGlobalScale = scale;
-				ImGui::GetStyle().ScaleAllSizes(scale);
-			}
-
 			ImGui_ImplSDL3_InitForOpenGL(window->GetWindow(), window->GetSDLGLContext());
 			ImGui_ImplOpenGL3_Init(glsl_version);
-
-			// Set initial framebuffer scale
-			UpdateFramebufferScale(window);
-		}
-
-		void UpdateFramebufferScale(SDLWindow* window) {
-			if (!window) return;
-			int fbW, fbH;
-			SDL_GetWindowSizeInPixels(window->GetWindow(), &fbW, &fbH);
-			int winW, winH;
-			SDL_GetWindowSize(window->GetWindow(), &winW, &winH);
-			if (winW > 0 && winH > 0) {
-				ImGuiIO& io = ImGui::GetIO();
-				io.DisplayFramebufferScale = ImVec2(
-					float(fbW) / float(winW),
-					float(fbH) / float(winH)
-				);
-			}
 		}
 
 		void BeginFrame() {
 			auto* primaryWindow = GetWindow<SDLWindow>();
 			if (primaryWindow && primaryWindow->GetSDLGLContext())
 				SDL_GL_MakeCurrent(primaryWindow->GetWindow(), primaryWindow->GetSDLGLContext());
-			UpdateFramebufferScale(primaryWindow);
 			ImGui_ImplOpenGL3_NewFrame();
 			ImGui_ImplSDL3_NewFrame();
 			ImGui::NewFrame();

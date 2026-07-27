@@ -21,19 +21,22 @@ static int g_lastH = 0;
 static void SyncCanvasSize() {
     double cssW = 0, cssH = 0;
     emscripten_get_element_css_size("#canvas", &cssW, &cssH);
-    int w = (int)cssW;
-    int h = (int)cssH;
-    if (w <= 0 || h <= 0) return;
+    if (cssW <= 0 || cssH <= 0) return;
+
+    double dpr = emscripten_get_device_pixel_ratio();
+    int fbW = (int)(cssW * dpr);
+    int fbH = (int)(cssH * dpr);
 
     int bw = 0, bh = 0;
     emscripten_get_canvas_element_size("#canvas", &bw, &bh);
 
-    if (bw != w || bh != h) {
-        emscripten_set_canvas_element_size("#canvas", w, h);
-        if (g_game) g_game->Resize(w, h);
-        g_lastW = w;
-        g_lastH = h;
-        std::cout << "[resize] canvas -> " << w << "x" << h << std::endl;
+    if (bw != fbW || bh != fbH) {
+        emscripten_set_canvas_element_size("#canvas", fbW, fbH);
+        if (g_game) g_game->Resize(fbW, fbH);
+        g_lastW = (int)cssW;
+        g_lastH = (int)cssH;
+        std::cout << "[resize] css=" << g_lastW << "x" << g_lastH
+                  << " fb=" << fbW << "x" << fbH << " dpr=" << dpr << std::endl;
     }
 }
 
