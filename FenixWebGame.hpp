@@ -54,12 +54,12 @@ namespace fe {
 			ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 		}
 
-		void DrawUI() override {
-			if (!showDebugUI_) return;
-			BeginFrame();
-			DrawDebugUI();
-			EndFrame();
-		}
+		// void DrawUI() override {
+		// 	if (!showDebugUI_) return;
+		// 	BeginFrame();
+		// 	DrawDebugUI();
+		// 	EndFrame();
+		// }
 
 		void DrawDebugUI() {
 			ImGui::Begin("FenixWeb Debug");
