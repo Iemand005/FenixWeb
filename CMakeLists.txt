@@ -5,9 +5,6 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# Ensure -g is in compile_commands.json for Debug
-set(CMAKE_CXX_FLAGS_DEBUG "-g")
-
 # ============================================================
 # Engine configuration - must be set before add_subdirectory
 # ============================================================
@@ -91,36 +88,45 @@ if(MSVC)
     target_link_options(FenixWeb PRIVATE $<$<CONFIG:Debug>:/DEBUG>)
 endif()
 
-# EMScripten-specific: linker flags only (NO -s USE_SDL=3, Engine builds SDL from source)
+# ============================================================
+# Emscripten build flags
+# ============================================================
 if(EMSCRIPTEN)
     set(CMAKE_EXECUTABLE_SUFFIX ".html")
-    
-    # Always include -g for debugging (single-config generator, CMAKE_BUILD_TYPE is empty)
-    # -fdebug-compilation-dir helps Chrome DevTools map source paths correctly
+
+    # Debug: full symbols + source maps
     target_compile_options(FenixWeb PRIVATE
-        -g
-        -fdebug-compilation-dir="${CMAKE_SOURCE_DIR}"
+        $<$<CONFIG:Debug>:-g -fdebug-compilation-dir="${CMAKE_SOURCE_DIR}">
     )
     target_link_options(FenixWeb PRIVATE
-        -g
-        -gsource-map
-    )
-    
-    set_target_properties(FenixWeb PROPERTIES
-        SUFFIX ".html"
-        LINK_FLAGS "-s USE_WEBGL2=1 -s FULL_ES3=1 -sGL_ENABLE_GET_PROC_ADDRESS=1 -s ALLOW_MEMORY_GROWTH=1 -s INITIAL_MEMORY=64MB -s NO_EXIT_RUNTIME=1 -s EXIT_RUNTIME=0 -s MAX_WEBGL_VERSION=2 -s MIN_WEBGL_VERSION=2 -sFORCE_FILESYSTEM=1 -sEXPORTED_RUNTIME_METHODS=FS,ccall,cwrap -sEXPORTED_FUNCTIONS=_main,_emscripten_file_dialog_callback,_malloc,_free --preload-file ${CMAKE_CURRENT_SOURCE_DIR}/resources@resources"
+        $<$<CONFIG:Debug>:-g -gsource-map>
     )
 
-    # Deploy to dist/ for GitHub Pages ONLY in Release mode
+    # Release: maximum size optimization, no debug info
+    target_compile_options(FenixWeb PRIVATE
+        $<$<CONFIG:Release>:-Oz -flto>
+    )
+    target_link_options(FenixWeb PRIVATE
+        $<$<CONFIG:Release>:-Oz -flto --closure 1 -sASSERTIONS=0>
+    )
+
+    file(TO_CMAKE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/resources" _res_cmake_path)
+
+    set_target_properties(FenixWeb PROPERTIES
+        SUFFIX ".html"
+        LINK_FLAGS "-sUSE_WEBGL2=1 -sFULL_ES3=1 -sGL_ENABLE_GET_PROC_ADDRESS=1 -sALLOW_MEMORY_GROWTH=1 -sINITIAL_MEMORY=64MB -sNO_EXIT_RUNTIME=1 -sEXIT_RUNTIME=0 -sMAX_WEBGL_VERSION=2 -sMIN_WEBGL_VERSION=2 -sFORCE_FILESYSTEM=1 -sEXPORTED_RUNTIME_METHODS=FS,ccall,cwrap -sEXPORTED_FUNCTIONS=_main,_emscripten_file_dialog_callback,_malloc,_free --preload-file ${_res_cmake_path}@resources"
+    )
+
+    # Deploy binaries to FenixWeb root for serving
     if(CMAKE_BUILD_TYPE STREQUAL "Release")
-        set(DIST_DIR "${CMAKE_CURRENT_SOURCE_DIR}/docs")
+        set(DEPLOY_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
         add_custom_command(TARGET FenixWeb POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E make_directory "${DIST_DIR}"
-            # COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE_DIR:FenixWeb>/FenixWeb.html" "${DIST_DIR}/index.html"
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE_DIR:FenixWeb>/FenixWeb.js" "${DIST_DIR}/FenixWeb.js"
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE_DIR:FenixWeb>/FenixWeb.wasm" "${DIST_DIR}/FenixWeb.wasm"
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE_DIR:FenixWeb>/FenixWeb.data" "${DIST_DIR}/FenixWeb.data"
-            COMMENT "Deploying to dist/ for GitHub Pages..."
+            COMMAND ${CMAKE_COMMAND} -E make_directory "${DEPLOY_DIR}"
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE_DIR:FenixWeb>/FenixWeb.html" "${DEPLOY_DIR}/FenixWeb.html"
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE_DIR:FenixWeb>/FenixWeb.js" "${DEPLOY_DIR}/FenixWeb.js"
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE_DIR:FenixWeb>/FenixWeb.wasm" "${DEPLOY_DIR}/FenixWeb.wasm"
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE_DIR:FenixWeb>/FenixWeb.data" "${DEPLOY_DIR}/FenixWeb.data"
+            COMMENT "Deploying FenixWeb binaries to ${DEPLOY_DIR}..."
         )
     endif()
 endif()
