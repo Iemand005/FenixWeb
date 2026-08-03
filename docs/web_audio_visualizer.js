@@ -18,7 +18,7 @@
  * Usage:
  *   var vis = new WebAudioVisualizer(Module);
  *   vis.onStateChange = function (state) { console.log(state); };
- *   vis.startMicrophone().catch(function (e) { /* fall back to a file */ });
+ *   vis.startMicrophone().catch(handleMicError);
  *   // or
  *   vis.loadFile(file);
  *   // or, if you manage your own AnalyserNode:
@@ -106,6 +106,15 @@
         self.mediaStream = stream;
         var src = self.audioContext.createMediaStreamSource(stream);
         src.connect(self.analyser);
+        // Firefox (pull-model) only processes the AnalyserNode when its output
+        // is wired toward the destination. Route it through a muted gain so
+        // the analyser renders but the mic doesn't feed back into the speakers.
+        if (self.audioContext.destination) {
+          self._monitorGain = self.audioContext.createGain();
+          self._monitorGain.gain.value = 0;
+          self.analyser.connect(self._monitorGain);
+          self._monitorGain.connect(self.audioContext.destination);
+        }
         self._attachSource(src);
         self._setState('mic', true);
         self._start();
@@ -222,9 +231,25 @@
     this._pushToWasm();
   };
 
+  // Returns a Float32Array view over the wasm heap, re-created on each call so
+  // it stays valid across ALLOW_MEMORY_GROWTH reallocations. Prefers the
+  // exported Module.HEAPF32; falls back to building a view over the raw wasm
+  // memory for builds that don't export HEAPF32.
+  WebAudioVisualizer.prototype._getHeapF32 = function () {
+    var m = this.wasm;
+    if (!m) return null;
+    if (m.HEAPF32) return m.HEAPF32;
+    var mem = (m.asm && m.asm.memory) || m.wasmMemory;
+    if (mem && mem.buffer) {
+      try { return new Float32Array(mem.buffer); }
+      catch (e) { return null; }
+    }
+    return null;
+  };
+
   WebAudioVisualizer.prototype._pushToWasm = function () {
     var m = this.wasm;
-    if (!m || !m.HEAPF32 || typeof m._FE_AudioSetFrequencyBins !== 'function') return;
+    if (!m || typeof m._FE_AudioSetFrequencyBins !== 'function') return;
 
     try {
       if (!this._ptrFreq && typeof m._malloc === 'function') {
@@ -233,10 +258,20 @@
       }
       if (!this._ptrFreq || !this._ptrTime) return;
 
-      m.HEAPF32.set(this.frequencyBins, this._ptrFreq >> 2);
+      var heapF32 = this._getHeapF32();
+      if (!heapF32) {
+        if (!this._warnedHeap) {
+          this._warnedHeap = true;
+          console.warn('[WebAudioVisualizer] no wasm heap view available ' +
+            '(export HEAPF32 in EXPORTED_RUNTIME_METHODS); skipping wasm handoff');
+        }
+        return;
+      }
+
+      heapF32.set(this.frequencyBins, this._ptrFreq >> 2);
       m._FE_AudioSetFrequencyBins(this._ptrFreq, this.binCount);
 
-      m.HEAPF32.set(this.timeDomain, this._ptrTime >> 2);
+      heapF32.set(this.timeDomain, this._ptrTime >> 2);
       m._FE_AudioSetTimeDomain(this._ptrTime, this.timeDomain.length);
     } catch (e) {
       // wasm heap not ready yet; retry next frame
