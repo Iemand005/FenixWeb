@@ -52,6 +52,10 @@
     this._ptrTime = 0;
     this._raf = 0;
     this._started = false;
+    this._lastResumeAt = 0;
+
+    this.lastPeak = 0;   // max linear magnitude [0, 1] seen last frame
+    this.lastDbPeak = -Infinity; // max dB seen last frame
 
     this.onStateChange = null;
     this.onAnalyse = null;
@@ -103,7 +107,6 @@
 
     return global.navigator.mediaDevices.getUserMedia({ audio: true })
       .then(function (stream) {
-        self.mediaStream = stream;
         var src = self.audioContext.createMediaStreamSource(stream);
         src.connect(self.analyser);
         // Firefox (pull-model) only processes the AnalyserNode when its output
@@ -115,7 +118,10 @@
           self.analyser.connect(self._monitorGain);
           self._monitorGain.connect(self.audioContext.destination);
         }
+        // Attach first (tears down any previous source), THEN keep the stream.
+        // Storing it beforehand would let the cleanup stop the brand-new mic.
         self._attachSource(src);
+        self.mediaStream = stream;
         self._setState('mic', true);
         self._start();
       })
@@ -148,11 +154,13 @@
 
       audio.addEventListener('canplay', function () {
         try {
-          self.audioElement = audio;
           var src = self.audioContext.createMediaElementSource(audio);
           src.connect(self.analyser);
           self.analyser.connect(self.audioContext.destination);
+          // Attach first (tears down any previous source), THEN keep the
+          // element, so the cleanup doesn't pause/clear the new track.
           self._attachSource(src);
+          self.audioElement = audio;
           self._setState('file', true);
           audio.play().then(function () {
             self._start();
@@ -215,16 +223,34 @@
   WebAudioVisualizer.prototype._tick = function () {
     if (!this.analyser) return;
 
+    // Autoplay policy can suspend the context (especially after the async
+    // getUserMedia gap); keep nudging it to resume.
+    if (this.audioContext && this.audioContext.state === 'suspended') {
+      var now = Date.now();
+      if (this.audioContext.resume && now - (this._lastResumeAt || 0) > 250) {
+        this._lastResumeAt = now;
+        var rp = this.audioContext.resume();
+        if (rp && rp.catch) rp.catch(function () {});
+      }
+      return;
+    }
+
     this.analyser.getFloatFrequencyData(this.frequencyBins);
     this.analyser.getFloatTimeDomainData(this.timeDomain);
 
     // dB (-Infinity..0) -> linear magnitude (0..1)
     var bins = this.frequencyBins;
+    var peak = 0;
+    var dbPeak = -Infinity;
     for (var i = 0; i < this.binCount; ++i) {
       var db = bins[i];
+      if (db > dbPeak) dbPeak = db;
       var mag = db <= -FREQ_NORMALIZE_DB ? 0 : Math.pow(10, db / 20);
+      if (mag > peak) peak = mag;
       bins[i] = mag > 1 ? 1 : mag;
     }
+    this.lastPeak = peak;
+    this.lastDbPeak = dbPeak;
 
     if (this.onAnalyse) this.onAnalyse(this);
 
@@ -294,6 +320,15 @@
     return this.binCount;
   };
 
+  // Highest linear magnitude [0, 1] across all bins from the last analysis.
+  WebAudioVisualizer.prototype.getPeak = function () {
+    return this.lastPeak;
+  };
+
+  WebAudioVisualizer.prototype.getContextState = function () {
+    return this.audioContext ? this.audioContext.state : 'none';
+  };
+
   /* ------------------------------------------------------------------ *
    *  Internals
    * ------------------------------------------------------------------ */
@@ -308,6 +343,11 @@
       if (this.sourceNode && this.sourceNode.disconnect) this.sourceNode.disconnect();
     } catch (e) {}
     this.sourceNode = null;
+
+    try {
+      if (this._monitorGain && this._monitorGain.disconnect) this._monitorGain.disconnect();
+    } catch (e) {}
+    this._monitorGain = null;
 
     try {
       if (this.audioElement) { this.audioElement.pause(); this.audioElement.src = ''; }

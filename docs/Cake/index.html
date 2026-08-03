@@ -59,6 +59,11 @@
         overflow: hidden;
         text-overflow: ellipsis;
       }
+      #audio-level {
+        color: #88ccff;
+        font-size: 11px;
+        white-space: nowrap;
+      }
       #audio-controls.dragging { outline: 2px dashed #66ff88; }
     </style>
   </head>
@@ -70,6 +75,7 @@
       <button id="btn-file" onclick="pickTrack()">Load Track...</button>
       <input type="file" id="file-input" accept="audio/*" hidden />
       <span id="audio-status">click a button or drop a track to feed the wasm analyser</span>
+      <span id="audio-level"></span>
     </div>
     <script src="../web_audio_visualizer.js"></script>
     <script>
@@ -118,9 +124,9 @@
           var el = document.getElementById('audio-status');
           if (!el) return;
           switch (ev.state) {
-            case 'mic': el.textContent = 'microphone → wasm analyser'; break;
-            case 'file': el.textContent = 'track playing → wasm analyser'; break;
-            case 'attach': el.textContent = 'analyser attached → wasm analyser'; break;
+            case 'mic': el.textContent = 'microphone ÔåÆ wasm analyser'; break;
+            case 'file': el.textContent = 'track playing ÔåÆ wasm analyser'; break;
+            case 'attach': el.textContent = 'analyser attached ÔåÆ wasm analyser'; break;
             case 'stopped': el.textContent = 'audio stopped'; break;
             case 'error': el.textContent = 'audio error: ' + ev.detail; break;
             default: el.textContent = String(ev.detail || ev.state);
@@ -137,7 +143,7 @@
           return;
         }
         vis.startMicrophone().catch(function () {
-          // mic denied/unavailable — fall back to a local track
+          // mic denied/unavailable ÔÇö fall back to a local track
           var btn = document.getElementById('btn-mic');
           if (btn) {
             btn.textContent = 'Start Microphone';
@@ -175,6 +181,16 @@
         var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
         if (f) ensureAudioVis().loadFile(f);
       });
+
+      // Live audio debug readout: linear peak, dB peak, AudioContext state.
+      setInterval(function () {
+        var el = document.getElementById('audio-level');
+        if (!el || !audioVis) { if (el) el.textContent = ''; return; }
+        var ctx = audioVis.audioContext;
+        var state = ctx ? ctx.state : 'none';
+        el.textContent = 'level ' + (audioVis.lastPeak ? audioVis.lastPeak.toFixed(3) : '0.000') +
+          ' / ' + (audioVis.lastDbPeak ? audioVis.lastDbPeak.toFixed(1) : '-Inf') + ' dB / ctx ' + state;
+      }, 200);
     </script>
     <script async src="Cake.js"></script>
   </body>
