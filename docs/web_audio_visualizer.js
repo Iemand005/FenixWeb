@@ -107,20 +107,26 @@
 
     return global.navigator.mediaDevices.getUserMedia({ audio: true })
       .then(function (stream) {
+        // Tear down any previous source/stream BEFORE wiring the new graph.
+        // Building it first would let the cleanup stop the brand-new mic and
+        // sever the analyser's path to the destination — Chrome then prunes
+        // that unrendered branch and the analyser stays at -Infinity.
+        self._cleanupSource();
+
         var src = self.audioContext.createMediaStreamSource(stream);
         src.connect(self.analyser);
-        // Firefox (pull-model) only processes the AnalyserNode when its output
-        // is wired toward the destination. Route it through a muted gain so
-        // the analyser renders but the mic doesn't feed back into the speakers.
+        // The analyser only renders when its output reaches the destination.
+        // Route it through a muted gain so the mic doesn't feed back into the
+        // speakers. NOTE: the gain must be NON-zero — Chrome treats an exactly
+        // silent tail as "nothing to render" and starves the AnalyserNode.
+        // 0.0001 (~-80 dB) is inaudible but keeps the chain alive everywhere.
         if (self.audioContext.destination) {
           self._monitorGain = self.audioContext.createGain();
-          self._monitorGain.gain.value = 0;
+          self._monitorGain.gain.value = 0.0001;
           self.analyser.connect(self._monitorGain);
           self._monitorGain.connect(self.audioContext.destination);
         }
-        // Attach first (tears down any previous source), THEN keep the stream.
-        // Storing it beforehand would let the cleanup stop the brand-new mic.
-        self._attachSource(src);
+        self.sourceNode = src;
         self.mediaStream = stream;
         self._setState('mic', true);
         self._start();
@@ -154,12 +160,18 @@
 
       audio.addEventListener('canplay', function () {
         try {
+          // Tear down any previous source/stream before wiring the new graph
+          // (same reasoning as startMicrophone).
+          self._cleanupSource();
           var src = self.audioContext.createMediaElementSource(audio);
           src.connect(self.analyser);
-          self.analyser.connect(self.audioContext.destination);
-          // Attach first (tears down any previous source), THEN keep the
-          // element, so the cleanup doesn't pause/clear the new track.
-          self._attachSource(src);
+          if (self.audioContext.destination) {
+            self._monitorGain = self.audioContext.createGain();
+            self._monitorGain.gain.value = 1.0;
+            self.analyser.connect(self._monitorGain);
+            self._monitorGain.connect(self.audioContext.destination);
+          }
+          self.sourceNode = src;
           self.audioElement = audio;
           self._setState('file', true);
           audio.play().then(function () {
