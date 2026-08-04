@@ -345,11 +345,6 @@
    *  Internals
    * ------------------------------------------------------------------ */
 
-  WebAudioVisualizer.prototype._attachSource = function (node) {
-    this._cleanupSource();
-    this.sourceNode = node;
-  };
-
   WebAudioVisualizer.prototype._cleanupSource = function () {
     try {
       if (this.sourceNode && this.sourceNode.disconnect) this.sourceNode.disconnect();
