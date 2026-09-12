@@ -7,12 +7,14 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # ============================================================
 # Engine configuration - must be set before add_subdirectory
+# Normal (non-cache) variables so these excludes never leak
+# into cached config of sibling projects in the meta build.
 # ============================================================
-set(FE_EXCLUDE_GLFW ON CACHE BOOL "Exclude GLFW from the build" FORCE)
-set(FE_EXCLUDE_JOLT ON CACHE BOOL "Exclude JOLT physics from the build" FORCE)
-set(FE_EXCLUDE_VULKAN ON CACHE BOOL "Exclude Vulkan from the build" FORCE)
-set(FE_EXCLUDE_OPENXR ON CACHE BOOL "Exclude OpenXR from the build" FORCE)
-set(FE_INCLUDE_OPENVR OFF CACHE BOOL "Include OpenVR" FORCE)
+set(FE_EXCLUDE_GLFW ON)
+set(FE_EXCLUDE_JOLT ON)
+set(FE_EXCLUDE_VULKAN ON)
+set(FE_EXCLUDE_OPENXR ON)
+set(FE_INCLUDE_OPENVR OFF)
 
 set(SDL_WASAPI OFF CACHE BOOL "" FORCE)
 set(SDL_GAMEINPUT OFF CACHE BOOL "" FORCE)
