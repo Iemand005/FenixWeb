@@ -16,9 +16,13 @@ set(FE_EXCLUDE_VULKAN ON)
 set(FE_EXCLUDE_OPENXR ON)
 set(FE_INCLUDE_OPENVR OFF)
 
-set(SDL_WASAPI OFF CACHE BOOL "" FORCE)
-set(SDL_GAMEINPUT OFF CACHE BOOL "" FORCE)
-set(SDL_JOYSTICK ON CACHE BOOL "" FORCE)
+# Only the web build should disable the desktop audio backends, otherwise these
+# cached values leak into the native meta build and break WASAPI capture.
+if(EMSCRIPTEN)
+    set(SDL_WASAPI OFF CACHE BOOL "" FORCE)
+    set(SDL_GAMEINPUT OFF CACHE BOOL "" FORCE)
+    set(SDL_JOYSTICK ON CACHE BOOL "" FORCE)
+endif()
 
 # ============================================================
 # Engine path
