@@ -7,7 +7,7 @@
 			"generator": "Ninja",
 			"binaryDir": "${sourceDir}/build-emscripten",
 			"cacheVariables": {
-				"CMAKE_TOOLCHAIN_FILE": "J:/emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake"
+				"CMAKE_TOOLCHAIN_FILE": "${sourceDir}/../../emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake"
 			}
 		}
 	],
