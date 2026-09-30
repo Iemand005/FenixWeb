@@ -90,7 +90,6 @@ if(EMSCRIPTEN)
 endif()
 
 if(MSVC)
-    target_compile_options(FenixWeb PRIVATE $<$<CONFIG:Debug>:/Zi>)
     target_link_options(FenixWeb PRIVATE $<$<CONFIG:Debug>:/DEBUG>)
 endif()
 
