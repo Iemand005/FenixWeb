@@ -33,7 +33,7 @@ static void SyncCanvasSize() {
 
     if (bw != fbW || bh != fbH) {
         emscripten_set_canvas_element_size("#canvas", fbW, fbH);
-        if (g_game) g_game->Resize(fbW, fbH);
+        if (g_game) g_game->resize(fbW, fbH);
         g_lastW = (int)cssW;
         g_lastH = (int)cssH;
         std::cout << "[resize] css=" << g_lastW << "x" << g_lastH
@@ -63,7 +63,7 @@ void main_loop() {
                 int h = event.window.data2;
                 if (w != g_lastW || h != g_lastH) {
                     emscripten_set_canvas_element_size("#canvas", w, h);
-                    g_game->Resize(w, h);
+                    g_game->resize(w, h);
                     g_lastW = w;
                     g_lastH = h;
                 }
@@ -143,7 +143,7 @@ int main() {
     std::cout << "[init] Window created. windows=" << g_game->windows.size() << std::endl;
 
     emscripten_set_canvas_element_size("#canvas", initW, initH);
-    g_game->Resize(initW, initH);
+    g_game->resize(initW, initH);
     g_lastW = initW;
     g_lastH = initH;
 

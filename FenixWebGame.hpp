@@ -54,7 +54,7 @@ namespace fe {
 			ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 		}
 
-		void DrawUI() override {
+		void drawUI() override {
 			if (!showDebugUI_) return;
 			BeginFrame();
 			EditableGame::DrawDebugUI();
