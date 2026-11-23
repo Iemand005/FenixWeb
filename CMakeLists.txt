@@ -73,7 +73,7 @@ target_include_directories(FenixWeb PRIVATE
     ${ENGINE_DIR}/external
     ${ENGINE_DIR}/external/imgui
     ${ENGINE_DIR}/external/SDL/include
-    ${ENGINE_DIR}/src/Engine
+    ${ENGINE_DIR}/src
 )
 
 target_link_libraries(FenixWeb PRIVATE
