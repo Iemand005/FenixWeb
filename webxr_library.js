@@ -37,7 +37,7 @@ mergeInto(LibraryManager.library, {
     }).then(function(result) {
       var session = result.session;
       var gl = result.gl;
-      var layer = new XRWebGLLayer(session, gl, { alpha: true, depth: true, stencil: false });
+      var layer = new (window["XRWebGLLayer"])(session, gl, { alpha: true, depth: true, stencil: false });
       session.updateRenderState({ baseLayer: layer });
       state.layer = layer;
 

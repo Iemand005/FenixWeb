@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Fenix - SuperShot</title>
+    <style>
+      * { margin: 0; padding: 0; }
+      html, body { width: 100%; height: 100%; overflow: hidden; background: #000; }
+      #canvas { display: block; width: 100%; height: 100%; }
+      .fenix-button {
+        position: fixed;
+        top: 12px;
+        z-index: 100;
+        padding: 8px 16px;
+        background: rgba(30, 30, 30, 0.85);
+        border-radius: 6px;
+        font-family: monospace;
+        font-size: 13px;
+        cursor: pointer;
+        user-select: none;
+      }
+      #toggle-imgui { right: 12px; color: #ff6600; border: 1px solid #ff6600; }
+      #toggle-imgui:hover { background: rgba(255, 102, 0, 0.2); }
+      #toggle-imgui.active { background: rgba(255, 102, 0, 0.35); }
+      #start-vr { right: 132px; color: #00aaff; border: 1px solid #00aaff; }
+      #start-vr:hover { background: rgba(0, 170, 255, 0.2); }
+    </style>
+  </head>
+  <body>
+    <canvas id="canvas" oncontextmenu="event.preventDefault()" tabindex="-1"></canvas>
+    <button id="toggle-imgui" class="fenix-button" onclick="toggleImGui()">Debug UI (F3)</button>
+    <button id="start-vr" class="fenix-button" onclick="startVR()">Enter VR</button>
+    <script>
+      var canvasElement = document.getElementById("canvas"),
+        Module = {
+          print: (...e) => console.log(...e),
+          printErr: (...e) => console.error(...e),
+          canvas: canvasElement,
+          setStatus: (text) => {
+            if (text) console.log(text);
+          },
+          monitorRunDependencies(e) {}
+        };
+
+      window.onerror = () => {};
+
+      function toggleImGui() {
+        if (typeof Module._ToggleImGui === 'function') {
+          Module._ToggleImGui();
+          var btn = document.getElementById('toggle-imgui');
+          var visible = Module._IsImGuiVisible();
+          btn.classList.toggle('active', visible === 1);
+        }
+      }
+
+      function startVR() {
+        if (typeof Module._FE_WebXR_RequestSession === 'function') {
+          Module._FE_WebXR_RequestSession();
+        }
+      }
+    </script>
+    <script async src="SuperShot.js"></script>
+  </body>
+</html>
