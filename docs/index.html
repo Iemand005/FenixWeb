@@ -25,11 +25,28 @@
       }
       #toggle-imgui:hover { background: rgba(255, 102, 0, 0.2); }
       #toggle-imgui.active { background: rgba(255, 102, 0, 0.35); }
+      #start-vr {
+        position: fixed;
+        top: 12px;
+        right: 132px;
+        z-index: 100;
+        padding: 8px 16px;
+        background: rgba(30, 30, 30, 0.85);
+        color: #00aaff;
+        border: 1px solid #00aaff;
+        border-radius: 6px;
+        font-family: monospace;
+        font-size: 13px;
+        cursor: pointer;
+        user-select: none;
+      }
+      #start-vr:hover { background: rgba(0, 170, 255, 0.2); }
     </style>
   </head>
   <body>
     <canvas id="canvas" oncontextmenu="event.preventDefault()" tabindex="-1"></canvas>
     <button id="toggle-imgui" onclick="toggleImGui()">Debug UI (F3)</button>
+    <button id="start-vr" onclick="startVR()">Enter VR</button>
     <script>
       var canvasElement = document.getElementById("canvas"),
         Module = {
@@ -50,6 +67,12 @@
           var btn = document.getElementById('toggle-imgui');
           var visible = Module._IsImGuiVisible();
           btn.classList.toggle('active', visible === 1);
+        }
+      }
+
+      function startVR() {
+        if (typeof Module._FE_WebXR_RequestSession === 'function') {
+          Module._FE_WebXR_RequestSession();
         }
       }
     </script>
