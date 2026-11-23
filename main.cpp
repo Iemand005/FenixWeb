@@ -44,7 +44,7 @@ static void SyncCanvasSize() {
 void main_loop() {
     if (!g_game) return;
 
-    auto* window = g_game->GetWindow();
+    auto* window = g_game->getWindow();
     if (!window) return;
 
     SyncCanvasSize();

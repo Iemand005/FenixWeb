@@ -22,7 +22,7 @@ namespace fe {
 		bool IsDebugUIShown() const { return showDebugUI_; }
 
 		void InitImGui() {
-			auto* window = GetWindow<SDLWindow>();
+			auto* window = getWindow<SDLWindow>();
 			if (!window) return;
 
 			const char* glsl_version = "#version 300 es";
@@ -38,7 +38,7 @@ namespace fe {
 		}
 
 		void BeginFrame() {
-			auto* primaryWindow = GetWindow<SDLWindow>();
+			auto* primaryWindow = getWindow<SDLWindow>();
 			if (primaryWindow && primaryWindow->GetSDLGLContext())
 				SDL_GL_MakeCurrent(primaryWindow->GetWindow(), primaryWindow->GetSDLGLContext());
 			ImGui_ImplOpenGL3_NewFrame();
@@ -48,7 +48,7 @@ namespace fe {
 
 		void EndFrame() {
 			ImGui::Render();
-			auto* primaryWindow = GetWindow<SDLWindow>();
+			auto* primaryWindow = getWindow<SDLWindow>();
 			if (primaryWindow && primaryWindow->GetSDLGLContext())
 				SDL_GL_MakeCurrent(primaryWindow->GetWindow(), primaryWindow->GetSDLGLContext());
 			ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
