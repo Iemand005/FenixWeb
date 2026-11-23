@@ -19,6 +19,7 @@ set(FE_INCLUDE_OPENVR OFF)
 # Only the web build should disable the desktop audio backends, otherwise these
 # cached values leak into the native meta build and break WASAPI capture.
 if(EMSCRIPTEN)
+    set(FE_INCLUDE_WEBXR ON)
     set(SDL_WASAPI OFF CACHE BOOL "" FORCE)
     set(SDL_GAMEINPUT OFF CACHE BOOL "" FORCE)
     set(SDL_JOYSTICK ON CACHE BOOL "" FORCE)
@@ -87,6 +88,9 @@ if(EMSCRIPTEN)
         FE_EXCLUDE_VULKAN
         FE_EXCLUDE_JOLT
     )
+    if(FE_INCLUDE_WEBXR)
+        target_compile_definitions(FenixWeb PRIVATE FE_INCLUDE_WEBXR)
+    endif()
 endif()
 
 if(MSVC)
@@ -117,9 +121,17 @@ if(EMSCRIPTEN)
 
     file(TO_CMAKE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/resources" _res_cmake_path)
 
+    set(_fe_webxr_link_flags "")
+    if(FE_INCLUDE_WEBXR)
+        set(_fe_webxr_js "${CMAKE_CURRENT_LIST_DIR}/webxr_library.js")
+        if(EXISTS "${_fe_webxr_js}")
+            set(_fe_webxr_link_flags "--js-library=${_fe_webxr_js}")
+        endif()
+    endif()
+
     set_target_properties(FenixWeb PROPERTIES
         SUFFIX ".html"
-        LINK_FLAGS "-sUSE_WEBGL2=1 -sFULL_ES3=1 -sGL_ENABLE_GET_PROC_ADDRESS=1 -sALLOW_MEMORY_GROWTH=1 -sINITIAL_MEMORY=64MB -sNO_EXIT_RUNTIME=1 -sEXIT_RUNTIME=0 -sMAX_WEBGL_VERSION=2 -sMIN_WEBGL_VERSION=2 -sFORCE_FILESYSTEM=1 -sEXPORTED_RUNTIME_METHODS=FS,ccall,cwrap -sEXPORTED_FUNCTIONS=_main,_emscripten_file_dialog_callback,_malloc,_free --preload-file ${_res_cmake_path}@resources"
+        LINK_FLAGS "-sUSE_WEBGL2=1 -sFULL_ES3=1 -sGL_ENABLE_GET_PROC_ADDRESS=1 -sALLOW_MEMORY_GROWTH=1 -sINITIAL_MEMORY=64MB -sNO_EXIT_RUNTIME=1 -sEXIT_RUNTIME=0 -sMAX_WEBGL_VERSION=2 -sMIN_WEBGL_VERSION=2 -sFORCE_FILESYSTEM=1 -sEXPORTED_RUNTIME_METHODS=FS,ccall,cwrap,HEAPF32,HEAPU8 -sEXPORTED_FUNCTIONS=_main,_emscripten_file_dialog_callback,_malloc,_free ${_fe_webxr_link_flags} --preload-file ${_res_cmake_path}@resources"
     )
 
     # Deploy binaries to FenixWeb root for serving
